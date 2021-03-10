@@ -1,16 +1,7 @@
 use config::Config;
-use oauth2::{basic::BasicClient};
-use oauth2::reqwest::http_client;
-use oauth2::{
-    AuthUrl,
-    ClientId,
-    ClientSecret,
-    TokenResponse,
-    TokenUrl
-};
-use std::env;
 mod config;
 mod response_searcher;
+mod oauth;
 use serde_json::Value;
 
 #[tokio::main]
@@ -21,7 +12,8 @@ async fn get(url: &str, secret: &str) -> Result<String, i32>{
     .bearer_auth(secret)
     .send()
     .await;
-let res_result = match res {
+
+    let res_result = match res {
         Ok(result) => result,
         Err(error) => {
             let status_code = match error.status() {
@@ -44,33 +36,16 @@ fn main() {
         }
     };
 
-    let client_id_string = env::var( "TWITTER_CLIENT_ID").unwrap().to_string();
-    let client_secret_string = env::var( "TWITTER_CLIENT_SECRET").unwrap().to_string();
-    let auth_url_string = "http://dummy";
-    let token_url_string = "https://api.twitter.com/oauth2/token";
-
-    let client = BasicClient::new(
-        ClientId::new(client_id_string.to_string()),
-        Some(ClientSecret::new(client_secret_string.to_string())),
-        AuthUrl::new(auth_url_string.to_string()).unwrap(),
-        Some(TokenUrl::new(token_url_string.to_string()).unwrap())
-    );
-
-    let token_result = client
-      .exchange_client_credentials()
-      .request(http_client);
-
-    let secret = match token_result {
-        Ok(result) => result.access_token().secret().to_string(),
-        Err(error) => {
-             println!("get access token error: {}", error);
-             std::process::exit(1);
+    let oauth = match oauth::Oauth::get_token() {
+        Ok(result) => result,
+        Err(_) => {
+            std::process::exit(1);
         }
     };
 
     let url = format!("https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name={}&tweet_mode=extended", config.screen_name);
 
-    let body = match get(&url, &secret) {
+    let body = match get(&url, &oauth.secret) {
         Ok(result) => result,
         Err(_) => {
             std::process::exit(1);
