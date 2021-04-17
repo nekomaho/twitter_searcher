@@ -14,15 +14,38 @@ pub struct Oauth {
 }
 
 impl Oauth {
+    fn get_oauth_info() -> Result<(String, String), i32> {
+        let client_id_string = match env::var( "TWITTER_CLIENT_ID") {
+            Ok(result) => result.to_string(),
+            Err(_) => {
+                println!("TWITTER_CLIENT_ID is not defined");
+                return Err(1);
+            }
+        };
+        let client_secret_string = match env::var( "TWITTER_CLIENT_SECRET") {
+            Ok(result) => result.to_string(),
+            Err(_) => {
+                println!("TWITTER_CLIENT_SECRET is not defined");
+                return Err(1);
+            }
+        };
+
+        Ok((client_id_string, client_secret_string))
+    }
+
     pub fn get_token() -> Result<Self, i32> {
-        let client_id_string = env::var( "TWITTER_CLIENT_ID").unwrap().to_string();
-        let client_secret_string = env::var( "TWITTER_CLIENT_SECRET").unwrap().to_string();
+        let auth_info = match Oauth::get_oauth_info() {
+            Ok(result) => result,
+            Err(_) => {
+                return Err(1);
+            }
+        };
         let auth_url_string = "http://dummy";
         let token_url_string = "https://api.twitter.com/oauth2/token";
 
         let secret = match BasicClient::new(
-            ClientId::new(client_id_string.to_string()),
-            Some(ClientSecret::new(client_secret_string.to_string())),
+            ClientId::new(auth_info.0),
+            Some(ClientSecret::new(auth_info.1)),
             AuthUrl::new(auth_url_string.to_string()).unwrap(),
             Some(TokenUrl::new(token_url_string.to_string()).unwrap())
             )
@@ -37,5 +60,4 @@ impl Oauth {
 
         Ok(Oauth {secret: secret})
     }
-    
 }
