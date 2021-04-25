@@ -54,7 +54,13 @@ fn main() {
 
     let json_body_value: Value = serde_json::from_str(&body).unwrap();
     let json_body = json_body_value.as_array().unwrap();
+    let mut count = 0;
+    let limit: i32 = config.output_lines.parse().unwrap();
     for tweets in json_body {
+        if count >= limit {
+            break;
+        }
+
         let title_text = &config.extract_keyword;
         if !response_searcher::ResponseSearcher::new(&tweets["full_text"].to_string(),0).exists(&title_text) {
             continue;
@@ -66,5 +72,6 @@ fn main() {
             let result_text = response_searcher::ResponseSearcher::new(&tweets["full_text"].to_string(), 1).search(&search_text);
             println!("{}", &result_text);
         }
+        count += 1;
     }
 }

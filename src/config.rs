@@ -5,6 +5,7 @@ use yaml_rust::YamlLoader;
 pub struct Config {
     pub screen_name: String,
     pub extract_keyword: String,
+    pub output_lines: String,
     pub extract_lines: Vec<String>
 }
 
@@ -39,6 +40,7 @@ impl Config {
         Ok(Config {
             screen_name: config["screen_name"].as_str().unwrap().to_string(),
             extract_keyword: config["extract_keyword"].as_str().unwrap().to_string(),
+            output_lines: config["output_lines"].as_i64().unwrap().to_string(),
             extract_lines: extract_lines,
         })
     }
