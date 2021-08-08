@@ -1,32 +1,9 @@
 use config::Config;
 mod config;
+mod http;
 mod response_searcher;
 mod oauth;
 use serde_json::Value;
-
-#[tokio::main]
-async fn get(url: &str, secret: &str) -> Result<String, i32>{
-    let req = reqwest::Client::new();
-    let res = req
-    .get(url)
-    .bearer_auth(secret)
-    .send()
-    .await;
-
-    let res_result = match res {
-        Ok(result) => result,
-        Err(error) => {
-            let status_code = match error.status() {
-                Some(status) => status.to_string(),
-                None => "".to_string()
-            };
-            println!("error: {}", status_code);
-            return Err(1)
-        }
-    };
-
-    Ok(res_result.text().await.unwrap())
-}
 
 fn main() {
     let config = match Config::new() {
@@ -45,7 +22,7 @@ fn main() {
 
     let url = format!("https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name={}&tweet_mode=extended", config.screen_name);
 
-    let body = match get(&url, &oauth.secret) {
+    let body = match http::get(&url, &oauth.secret) {
         Ok(result) => result,
         Err(_) => {
             std::process::exit(1);
