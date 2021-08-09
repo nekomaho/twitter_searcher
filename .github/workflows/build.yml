@@ -1,0 +1,17 @@
+name: Rust Build
+
+on:
+  push:
+    branches: [ main ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: build binary
+      run: cargo install --path .
+    - name: Archive binary
+      uses: actions/upload-artifact@v2
+      with:
+        name: build-binary
+        path: target/release/twitter_searcher
